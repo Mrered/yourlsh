@@ -19,5 +19,5 @@ brew install shurl
 3. 运行下面命令后，生成的短链会自动复制到你的剪贴板。
 
 ```sh
-./shurl -s <你的signature>
+shurl -s <你的signature>
 ```
