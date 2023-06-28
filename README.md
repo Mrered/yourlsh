@@ -19,5 +19,12 @@ brew install shurl
 3. 运行下面命令后，生成的短链会自动复制到你的剪贴板。
 
 ```sh
-shurl -s <你的signature>
+shurl -d <你的域名> -s <你的signature>
 ```
+
+参数说明
+
+|    参数     |            值            |     用法示例     |
+| :---------: | :----------------------: | :--------------: |
+|  `domain`   | 你的域名，不包含 `https` | `-d example.com` |
+| `signature` |   你的 Signature token   | `-s a1b2c3d4e5`  |
