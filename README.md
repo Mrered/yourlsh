@@ -12,19 +12,34 @@ brew update
 brew install shurl
 ```
 
-## 使用方法
+## 初始化
 
-1. 去自己的后台 `https://<你的域名>/admin/tools.php` 获取 `Signature token` ；
-2. 将要缩短的链接复制到剪贴板中，程序将从剪贴板里直接获取内容；
-3. 运行下面命令后，生成的短链会自动复制到你的剪贴板。
+去自己的后台 `https://<你的域名>/admin/tools.php` 获取 `Signature token` ，安装后首次执行会提示
 
 ```sh
-shurl -d <你的域名> -s <你的signature>
+配置文件 ~/.shurl/config.json 不存在，请输入以下参数：
+请输入域名，不包含 https:// （例如：example.com）: 
+请输入 signature token: 
 ```
 
-参数说明
+依次填写 域名 和 signature token ，回车完成初始化，会提示
 
-|    参数     |            值            |     用法示例     |
-| :---------: | :----------------------: | :--------------: |
-|  `domain`   | 你的域名，不包含 `https` | `-d example.com` |
-| `signature` |   你的 Signature token   | `-s a1b2c3d4e5`  |
+```sh
+初始化成功，若要更改配置，请删除 ~/.shurl/config.json
+```
+
+## 使用方法
+
+1. 将要缩短的链接复制到剪贴板中，程序将从剪贴板里直接获取内容；
+2. 运行下面命令后，生成的短链会自动复制到你的剪贴板。
+
+```sh
+shurl
+```
+
+`config.json` 参数说明
+
+|    参数     |                 说明                  |
+| :---------: | :-----------------------------------: |
+|  `domain`   | 你的域名，必须套 TLS ，不包含 `https` |
+| `signature` |         你的 Signature token          |
