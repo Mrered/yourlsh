@@ -50,10 +50,11 @@ else
     read "signature?请输入 signature token（十位数字字母组合）: "
     validate_signature "$signature" && break
   done
-fi
 
-printf '{"domain":"%s","signature":"%s"}' "$domain" "$signature" > "$config_file"
-echo "配置已保存到 $config_file。"
+  mkdir -p "$(dirname "$config_file")"  # 创建目录（如果不存在）
+  printf '{"domain":"%s","signature":"%s"}' "$domain" "$signature" > "$config_file"
+  echo "配置已保存到 $config_file。"
+fi
 
 if [[ -z $url ]]; then
   echo "剪贴板中未找到URL，请复制URL然后再次执行脚本。"
