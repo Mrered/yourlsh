@@ -23,8 +23,8 @@ function read_configuration {
   domain=$(echo "$data" | jq -r '.domain')
   signature=$(echo "$data" | jq -r '.signature')
 
-  validate_domain "$domain" || exit 1
-  validate_signature "$signature" || exit 1
+  validate_domain "$domain" || return 1
+  validate_signature "$signature" || return 1
 }
 
 if [[ $1 == "-r" ]]; then
@@ -41,16 +41,11 @@ elif [[ -f $config_file ]]; then
   fi
 else
   echo "配置文件 $config_file 不存在，请输入以下参数："
-fi
-
-if [[ -z $domain ]]; then
   while true; do
     read -p "请输入域名，不包含 https:// （例如：example.com）: " domain
     validate_domain "$domain" && break
   done
-fi
 
-if [[ -z $signature ]]; then
   while true; do
     read -p "请输入 signature token（十位数字字母组合）: " signature
     validate_signature "$signature" && break
