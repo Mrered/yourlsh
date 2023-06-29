@@ -2,45 +2,55 @@
 config_file=~/.shurl/config.json
 url=$(pbpaste)
 
+function validate_domain {
+  local domain=$1
+  if [[ ! $domain =~ ^[a-zA-Z0-9.-]+$ ]]; then
+    echo "无效的域名，请重新输入正确的域名。"
+    return 1
+  fi
+}
+
+function validate_signature {
+  local signature=$1
+  if [[ ! $signature =~ ^[a-zA-Z0-9]{10}$ ]]; then
+    echo "无效的 signature token，请重新输入正确的值。"
+    return 1
+  fi
+}
+
+function read_configuration {
+  local data=$(cat "$config_file")
+  domain=$(echo "$data" | jq -r '.domain')
+  signature=$(echo "$data" | jq -r '.signature')
+
+  validate_domain "$domain" || exit 1
+  validate_signature "$signature" || exit 1
+}
+
 if [[ $1 == "-r" ]]; then
   rm -f "$config_file"
   echo "已删除配置文件 $config_file。"
   echo "请输入以下参数："
 else
   if [[ -f $config_file ]]; then
-    config_data=$(cat "$config_file")
-    domain=$(echo "$config_data" | jq -r '.domain')
-    signature=$(echo "$config_data" | jq -r '.signature')
+    read_configuration
+    if [[ $? -eq 0 ]]; then
+      read -p "若要重新配置，请使用 shurl -r 命令。"
+      exit 0
+    fi
   fi
 
-  if [[ -z $domain || -z $signature ]]; then
-    echo "配置文件 $config_file 不存在或内容不完整，请输入以下参数："
-  else
-    echo "配置文件 $config_file 已存在，并包含以下配置："
-    echo "域名: $domain"
-    echo "签名: $signature"
-    echo
-    read -p "若要重新配置，请使用 shurl -r 命令。"
-    exit 0
-  fi
+  echo "配置文件 $config_file 不存在或内容不完整，请输入以下参数："
 fi
 
 while true; do
   read -p "请输入域名，不包含 https:// （例如：example.com）: " domain
-  if [[ ! $domain =~ ^[a-zA-Z0-9.-]+$ ]]; then
-    echo "无效的域名，请重新输入正确的域名。"
-  else
-    break
-  fi
+  validate_domain "$domain" && break
 done
 
 while true; do
   read -p "请输入 signature token（十位数字字母组合）: " signature
-  if [[ ! $signature =~ ^[a-zA-Z0-9]{10}$ ]]; then
-    echo "无效的 signature token，请重新输入正确的值。"
-  else
-    break
-  fi
+  validate_signature "$signature" && break
 done
 
 mkdir -p "$(dirname "$config_file")"
