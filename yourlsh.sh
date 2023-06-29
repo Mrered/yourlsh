@@ -31,31 +31,34 @@ if [[ $1 == "-r" ]]; then
   rm -f "$config_file"
   echo "已删除配置文件 $config_file。"
   echo "请输入以下参数："
-else
-  if [[ -f $config_file ]]; then
-    read_configuration
-    if [[ $? -eq 0 ]]; then
-      read -p "若要重新配置，请使用 shurl -r 命令。"
-      exit 0
-    fi
+elif [[ -f $config_file ]]; then
+  read_configuration
+  if [[ $? -eq 0 ]]; then
+    echo "配置文件 $config_file 已存在，将使用其中的配置信息。"
+  else
+    echo "配置文件 $config_file 不完整或包含无效配置信息，请重新配置。"
+    exit 1
   fi
-
-  echo "配置文件 $config_file 不存在或内容不完整，请输入以下参数："
+else
+  echo "配置文件 $config_file 不存在，请输入以下参数："
 fi
 
-while true; do
-  read -p "请输入域名，不包含 https:// （例如：example.com）: " domain
-  validate_domain "$domain" && break
-done
+if [[ -z $domain ]]; then
+  while true; do
+    read -p "请输入域名，不包含 https:// （例如：example.com）: " domain
+    validate_domain "$domain" && break
+  done
+fi
 
-while true; do
-  read -p "请输入 signature token（十位数字字母组合）: " signature
-  validate_signature "$signature" && break
-done
+if [[ -z $signature ]]; then
+  while true; do
+    read -p "请输入 signature token（十位数字字母组合）: " signature
+    validate_signature "$signature" && break
+  done
+fi
 
-mkdir -p "$(dirname "$config_file")"
 printf '{"domain":"%s","signature":"%s"}' "$domain" "$signature" > "$config_file"
-echo "初始化成功，若要更改配置，请使用 shurl -r 命令。"
+echo "配置已保存到 $config_file。"
 
 if [[ -z $url ]]; then
   echo "剪贴板中未找到URL，请复制URL然后再次执行脚本。"
