@@ -42,12 +42,12 @@ elif [[ -f $config_file ]]; then
 else
   echo "配置文件 $config_file 不存在，请输入以下参数："
   while true; do
-    read -p "请输入域名，不包含 https:// （例如：example.com）: " domain
+    read "domain?请输入域名，不包含 https:// （例如：example.com）: "
     validate_domain "$domain" && break
   done
 
   while true; do
-    read -p "请输入 signature token（十位数字字母组合）: " signature
+    read "signature?请输入 signature token（十位数字字母组合）: "
     validate_signature "$signature" && break
   done
 fi
