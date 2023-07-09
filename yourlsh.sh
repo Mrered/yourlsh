@@ -67,8 +67,28 @@ initialization() {
   fi
 }
 
-# 判断是否需重新配置
-if needInitialization "$1"; then
+printHelp() {
+  echo "  帮助："
+  echo ""
+  echo "        初次运行 shurl 时会自动判断并进行初始化"
+  echo "        若配置内容有误，运行 shurl 会重新初始化"
+  echo "        将要缩短链接拷贝到剪贴板后运行 shurl，返回的短链会直接拷贝到剪贴板"
+  echo ""
+  echo "  参数："
+  echo ""
+  echo "  -h    打印帮助内容"
+  echo "  -r    删除配置文件并重新初始化"
+  echo ""
+  echo "  更新："
+  echo ""
+  echo "        brew update"
+  echo "        brew upgrade shurl"
+}
+
+# 判断是否需重新配置或打印帮助内容
+if [ "$1" == "-h" ]; then
+  printHelp
+elif needInitialization "$1"; then
   initialization
 else
   # 执行 curl 操作
