@@ -1,26 +1,78 @@
 #!/bin/zsh
-config_file=~/.shurl/config.json
+
+CONFIG_DIR="$HOME/Library/Application Support/shurl"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+result=""
+
+# 方法 - 执行curl操作 
+curlFunc() {
+  curl -s -L "https://$1/yourls-api.php?signature=$2&action=shorturl&format=simple&url=$3"
+}
+
+# 获取剪贴板 url
 url=$(pbpaste)
 
-if [[ ! -f $config_file ]]; then
-  echo "配置文件 $config_file 不存在，请输入以下参数："
-  read "domain?请输入域名，不包含 https:// （例如：example.com）: "
-  read "signature?请输入 signature token: "
+isCheck() {
+  jq -r ".${1}" "$CONFIG_FILE"
+}
 
-  mkdir -p "$(dirname "$config_file")"
-  printf '{"domain":"%s","signature":"%s"}' "$domain" "$signature" > "$config_file"
-  echo "初始化成功，若要更改配置，请删除 $config_file"
-  exit 0
+writeConfig() {
+  jq ". + {\"$1\": \"$2\"}" "$CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$CONFIG_FILE"
+}
+
+# 在初始化之前检查是否需要重新配置
+needInitialization() {
+  if [ "$1" == "-r" ]; then
+    return 0
+  elif [ ! -f "$CONFIG_FILE" ]; then
+    return 0
+  elif ! jq -e '.domain and .signature and .check' "$CONFIG_FILE" >/dev/null 2>&1; then
+    return 0
+  elif [ "$(isCheck check)" == "false" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+initialization() {
+  if [ ! -d "$CONFIG_DIR" ]; then
+    mkdir -p "$CONFIG_DIR"
+  fi
+    
+  echo -n "输入你的域名，不包含 https:// （如：example.com）："
+  read domain
+  until [[ $domain == *"."* ]]; do
+    read "domain?请输入正确的域名，不包含 https:// （如：example.com）："
+  done
+
+  echo -n "输入 signature ，可从 https://$domain/admin/tools.php 获取："
+  read signature
+  until [[ $signature =~ ^[0-9a-zA-Z]{10}$ ]]; do
+    read "signature?无效输入，请重新输入："
+  done
+
+  # 写入配置文件
+  echo "{ \"domain\": \"$domain\", \"signature\": \"$signature\", \"check\": false }" > "$CONFIG_FILE"
+  echo "正在检测配置是否正确"
+  url="https://images.unsplash.com/photo-1580855014124-d1e9d454c6b1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZXZlcnl0aGluZyUyMGlzJTIwZ29pbmclMjB0byUyMGJlJTIwYWxyaWdodHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60"
+  result=$(curlFunc $domain $signature $url)
+  if [[ $result == "http"* ]]; then
+    writeConfig "check" "true"
+    open "$result"
+    echo "配置正确，初始化成功，详细用法请访问 https://github.com/Mrered/yourlsh "
+  else
+    writeConfig "check" "false"
+    echo "你的配置有误，请重新配置"
+  fi
+}
+
+# 判断是否需重新配置
+if needInitialization "$1"; then
+  initialization
 else
-  config_data=$(cat "$config_file")
-  domain=$(echo "$config_data" | jq -r '.domain')
-  signature=$(echo "$config_data" | jq -r '.signature')
+  # 执行 curl 操作
+  domain=$(jq -r .domain "$CONFIG_FILE")
+  signature=$(jq -r .signature "$CONFIG_FILE")
+  echo -n $(curlFunc $domain $signature $url) | pbcopy 
 fi
-
-if [[ -z $url ]]; then
-  echo "剪贴板中未找到URL，请复制URL然后再次执行脚本。"
-  exit 1
-fi
-
-# 执行 curl 请求并将结果复制到剪贴板
-echo -n $(curl -s -L "https://$domain/yourls-api.php?signature=$signature&action=shorturl&format=simple&url=$url") | pbcopy
